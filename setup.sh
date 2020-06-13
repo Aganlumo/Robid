@@ -45,3 +45,5 @@ export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:<PATH>/ORB_SLAM2/Examples/ROS
 echo "Building for ROS"
 chmod +x build_ros.sh
 ./build_ros.sh
+
+echo "Success!"
