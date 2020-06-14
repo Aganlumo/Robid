@@ -26,7 +26,6 @@ chmod +x opencv.sh
 ./opencv.sh
 
 echo "Installing Eigen 3.2.10"
-cd ../../../
 wget https://gitlab.com/libeigen/eigen/-/archive/3.2.10/eigen-3.2.10.tar.gz
 tar -xvf eigen-3.2.10.tar.gz
 cd eigen-3.2.10
@@ -41,7 +40,7 @@ cd ../../../ORB_SLAM2
 chmod +x build.sh
 ./build.sh
 
-export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:<PATH>/ORB_SLAM2/Examples/ROS
+export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:home/david/Robid/ORB_SLAM2/Examples/ROS
 echo "Building for ROS"
 chmod +x build_ros.sh
 ./build_ros.sh
