@@ -32,3 +32,5 @@ src/OpenCV
 src/orb_slam_2_ros
 .catkin_workspace
 .catkin_tools/
+turtle.sh
+ORB_SLAM2/mapRGBD.bin
