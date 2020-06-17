@@ -1,0 +1,56 @@
+rosrun ORB_SLAM2 Mono Vocabulary/ORBvoc.txt Examples/Monocular/USB_CAMERA.yaml true false false
+
+rqt_bag
+rosbag play --pause PRUEBA01.bag /cam0/image_raw:=/usb_cam/image_raw
+
+rostopic echo /ORB_SLAM2/pose
+
+
+
+Reproducir serie de imagenes:
+./Examples/Monocular/mono_euroc Vocabulary/ORBvoc.txt Examples/Monocular/EuRoC.yaml /home/gabriel/Autonomous_Code/ORB_SLAM2/VIDEO/PRUEBA/ VIDEO/PRUEBA/TXT/V101.txt
+./Examples/Monocular/mono_euroc Vocabulary/ORBvoc.txt Examples/Monocular/EuRoC.yaml /home/gabriel/Autonomous_Code/ORB_SLAM2/VIDEO/mav0/cam0/data Examples/Monocular/EuRoC_TimeStamps/MH01.txt 
+
+
+Stereo:
+rosbag play --pause V1_01_easy.bag /cam0/image_raw:=/camera/left/image_raw /cam1/image_raw:=/camera/right/image_raw
+
+
+
+
+Mono:
+rosbag play --pause PRUEBA01.bag /cam0/image_raw:=/usb_cam/image_raw
+
+
+
+
+
+
+
+
+
+roslaunch freenect_launch freenect.launch
+rosrun ORB_SLAM2 RGBD Vocabulary/ORBvoc.txt Examples/RGB-D/kinect2.yaml true false false
+rosrun ORB_SLAM2 RGBD Vocabulary/ORBvoc.txt Examples/RGB-D/kinect2.yaml true true true
+
+
+./Examples/Monocular/mono_euroc Vocabulary/ORBvoc.txt Examples/Monocular/EuRoC.yaml /home/gabriel/Autonomous_Code/ORB_SLAM2/VIDEO/mav0/cam0/data Examples/Monocular/EuRoC_TimeStamps/MH01.txt 
+
+
+ROSCORE
+ROSGAB (Ya grabado)
+ORB_SLAM, sin activar la cámara
+
+
+
+
+
+
+
+
+
+
+
+
+
+VEO POSICIONES DE CADA PUNTO REALIZADO EN EL MAPA. sI LE PONGO UN OBSTACULO, EL PUNTO YA NO LO VOY A VER, PERO VEO PUNTOS. SI ESPERABA PUNTOS, PERO VEO OTROS, YO PUEDO CONOCER LA DISTANCIA QUE TNIEENEN. CoN ESO PUEDO IDENTIFICAR LOS OBSTÁCULOS. ESOS PUNTOS REPRESENTAN UN OBSTÁCULO. TIENEN QUE SER MUCHOS PUNTOS.
