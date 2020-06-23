@@ -29,7 +29,7 @@ if __name__ == "__main__":
     sy = 247
     gx = 322
     gy = 280
-    grid_size = 1
+    grid_size = 2
     robot_radius = 5
 
     image = read_pgm("map.pgm", byteorder='<')
