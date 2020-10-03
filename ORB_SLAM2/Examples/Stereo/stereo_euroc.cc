@@ -31,6 +31,10 @@
 
 using namespace std;
 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 void LoadImages(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
                 vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps);
 

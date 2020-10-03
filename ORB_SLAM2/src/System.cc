@@ -26,6 +26,10 @@
 #include <pangolin/pangolin.h>
 #include <iomanip>  // std::setprecision
 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 // king: for binary voc
 bool has_suffix(const std::string& str, const std::string& suffix)
 {
