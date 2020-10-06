@@ -5,20 +5,20 @@
 # it reads a map, created previusly
 #
 
-# codigo identado respecto a test8
+# PID Controller for Turtlebot
 import rospy
 import math
 import time
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 from std_msgs.msg import Int16
 
 zed_pos_x_ = 1.0 # initializes zed x position variable
 zed_pos_y_ = 1.0 # initializes zed y position
 zed_theta_ = 0.0 # initializes zed theta orientation
 time_stamp = 0.0 # initializes time stamps for calculating speed
-gamma = 0        # initializes variables for publishers
+gamma = Twist()        # initializes variables for publishers
 q_acc = 0        # initializes accelerator varible for publisher
-q_brake = -2     # initializes brake varible for publisher
+# q_brake = -2     # initializes brake varible for publisher
 camera_state = 1 # it the camera status
 # harlan_state = 1
 
@@ -123,9 +123,9 @@ def curve_id (values):
 # @param values is the array of data
 
 def nearKeyFrame(values):
-    global gamma    # Is the value of the stearing wheel
+    global twist_msg    # Is the value of the stearing wheel
     global q_acc    # Is the value of the accelerator pedal
-    global q_brake  # Is the value of the brake pedal
+    # global q_brake  # Is the value of the brake pedal
     n=0
     global last_time_stamp  # Is the time enlapse
     for b in values:
@@ -135,15 +135,15 @@ def nearKeyFrame(values):
     error_list = []
     condition = 0
     print 'Finding in route...'
-    gamma = 5
+    twist_msg.angular.z = 0.0
     q_acc = 0
-    q_brake = 9
-    pub_gamma = rospy.Publisher('Control/control_gamma', Int16, queue_size=10)
+    # q_brake = 9
+    pub_twist_msg = rospy.Publisher('cmd_vel', Twist, queue_size=10)
     pub_acc = rospy.Publisher('Control/accelerator', Int16, queue_size=10)
-    pub_brk = rospy.Publisher('Control/brakes', Int16, queue_size=10)
-    pub_gamma.publish(gamma)
+    # pub_brk = rospy.Publisher('Control/brakes', Int16, queue_size=10)
+    pub_twist_msg.publish(twist_msg)
     pub_acc.publish(q_acc)
-    pub_brk.publish(q_brake)
+    # pub_brk.publish(q_brake)
     time.sleep(1)
     while condition != 1 or not rospy.core.is_shutdown():
         rospy.Subscriber('ORB_SLAM2/pose', PoseStamped, callback_pose)
@@ -166,27 +166,27 @@ def nearKeyFrame(values):
 
 def gamma_comtrol(error):
     if error < -28:
-        gamma = 0
+        gamma = 0.5
     elif error >= -28 and error < -21:
-        gamma = 1
+        gamma = 0.4
     elif error >= -21 and error < -14:
-        gamma = 2
+        gamma = 0.3
     elif error >= -14 and error < -7:
-        gamma = 3
+        gamma = 0.2
     elif error <= 0 and error > -7:
-        gamma = 4
+        gamma = 0.1
     elif error > 0 and error < 7:
-        gamma = 5
+        gamma = 0
     elif error >= 7 and error < 14:
-        gamma = 6
+        gamma = -0.1
     elif error >= 14 and error < 21:
-        gamma = 7
+        gamma = -0.2
     elif error >= 21 and error < 28:
-        gamma = 8
+        gamma = -0.3
     elif error >= 28 and error < 35:
-        gamma = 9
+        gamma = -0.4
     elif error >= 35:
-        gamma = 10
+        gamma = -0.5
     return gamma
 
 def acc_control(error):
@@ -212,28 +212,28 @@ def acc_control(error):
         acc_sp = 9
     return acc_sp
 
-def brk_control(error):
-    if error > 2:
-        brake_sp = 10
-    elif error >= 1 and error < 2:
-        brake_sp = 9
-    elif error >= 0 and error < 1:
-        brake_sp = 8
-    elif error >= -1 and error < 0:
-        brake_sp = 7
-    elif error >= -2 and error < -1:
-        brake_sp = 6
-    elif error >= -3 and error < -2:
-        brake_sp = 5
-    elif error >= -4 and error < -3:
-        brake_sp = 4
-    elif error >= -5 and error < -4:
-        brake_sp = 3
-    elif error >= -6 and error < -5:
-        brake_sp = 2
-    elif error < -6:
-        brake_sp = 1
-    return brake_sp
+# def brk_control(error):
+#     if error > 2:
+#         brake_sp = 10
+#     elif error >= 1 and error < 2:
+#         brake_sp = 9
+#     elif error >= 0 and error < 1:
+#         brake_sp = 8
+#     elif error >= -1 and error < 0:
+#         brake_sp = 7
+#     elif error >= -2 and error < -1:
+#         brake_sp = 6
+#     elif error >= -3 and error < -2:
+#         brake_sp = 5
+#     elif error >= -4 and error < -3:
+#         brake_sp = 4
+#     elif error >= -5 and error < -4:
+#         brake_sp = 3
+#     elif error >= -6 and error < -5:
+#         brake_sp = 2
+#     elif error < -6:
+#         brake_sp = 1
+#     return brake_sp
 
 if __name__ == '__main__':
     last_error_theta = 0.0 # initializes a thetha variable
@@ -244,14 +244,16 @@ if __name__ == '__main__':
     on_curve = 0
     speed_sp = 5.0
     speed_error= 0
-    output_gamma = 5
+    output_gamma = 0
     output_brk = 0
     output_acc = 0
     rospy.init_node('listener', anonymous=True)
     frame_id = 0
     values = getfile() # readsfile and stores in dynamic array
-    curves = curve_id(values)
+    # curves = curve_id(values)
     frame_id = nearKeyFrame(values) # gets nearest keyframe to actual position
+
+
 
     for curve_index in range(len(start_curve_frames) - 1):
         if frame_id >= start_curve_frames[curve_index]:
@@ -260,11 +262,11 @@ if __name__ == '__main__':
         else:
             nearest_curve_id = start_curve_frames[0]
 
-    print 'nearest_curve_id', nearest_curve_id
+    # print 'nearest_curve_id', nearest_curve_id
 
-    pub_gamma = rospy.Publisher('Control/control_gamma', Int16, queue_size=10) # publisher for controlling the steering wheel
+    pub_twist_msg = rospy.Publisher('cmd_vel', Twist, queue_size=10) # publisher for controlling the steering wheel
     pub_acc = rospy.Publisher('Control/accelerator', Int16, queue_size=10) # publisher for controlling the accelerator
-    pub_brk = rospy.Publisher('Control/brakes', Int16, queue_size=10) # publisher for controlling the brakes
+    # pub_brk = rospy.Publisher('Control/brakes', Int16, queue_size=10) # publisher for controlling the brakes
     pub_stop = rospy.Publisher('Control/stopRoutine', Int16, queue_size=10)
     rate = rospy.Rate(10) # rate at which the node publishes in Hz
     while not rospy.core.is_shutdown():
@@ -282,9 +284,9 @@ if __name__ == '__main__':
         y_prime = error_x*math.sin(zed_theta_*math.pi/180) + error_y*math.cos(zed_theta_*math.pi/180)
         theta = math.atan(x_prime/y_prime)*180/math.pi
 
-        x_to_next_curve = values[nearest_curve_id][0] - zed_pos_x_
-        y_to_next_curve = values[nearest_curve_id][1] - zed_pos_y_
-        d_to_next_curve = math.sqrt(x_to_next_curve**2 + y_to_next_curve**2)
+        # x_to_next_curve = values[nearest_curve_id][0] - zed_pos_x_
+        # y_to_next_curve = values[nearest_curve_id][1] - zed_pos_y_
+        # d_to_next_curve = math.sqrt(x_to_next_curve**2 + y_to_next_curve**2)
 
         if last_time_stamp != time_stamp:
             # print 'Last time stamp: ', last_time_stamp
@@ -301,17 +303,17 @@ if __name__ == '__main__':
             last_zed_pos_y_ = zed_pos_y_
             last_time_stamp = time_stamp
 
-            if (d_to_next_curve) < 1 or gamma > 7 or gamma < 3:
-                on_curve = 1
-                speed_sp = 2.0
-            elif (frame_id)  > end_curve_frames[curve_index]:
-                on_curve = 0
-                speed_sp = 4.0
-                if curve_index == len(start_curve_frames)- 1:
-                    curve_index = 0
-                else:
-                    curve_index += 1
-                nearest_curve_id = start_curve_frames[curve_index]
+            # if (d_to_next_curve) < 1 or gamma > 7 or gamma < 3:
+            #     on_curve = 1
+            #     speed_sp = 2.0
+            # elif (frame_id)  > end_curve_frames[curve_index]:
+            #     on_curve = 0
+            #     speed_sp = 4.0
+            #     if curve_index == len(start_curve_frames)- 1:
+            #         curve_index = 0
+            #     else:
+            #         curve_index += 1
+            #     nearest_curve_id = start_curve_frames[curve_index]
 
             speed_error = speed_sp - speed_d
 
@@ -334,9 +336,9 @@ if __name__ == '__main__':
             if camera_state == 2: #camera_state 2 is camera lost
                 frame_id = nearKeyFrame(values)
             else:
-                gamma = gamma_comtrol(output_gamma)
-                q_acc = acc_control(output_acc)
-                q_brake = brk_control(output_brk)
+                twist_msg.angular.z = gamma_comtrol(output_gamma)
+                twist_msg.linear.x = acc_control(output_acc)
+                # q_brake = brk_control(output_brk)
 
                 if frame_id >= (next_frame_stop - 6) and frame_id <= (next_frame_stop + 6):
                     # frame_id += 7
@@ -346,9 +348,9 @@ if __name__ == '__main__':
                     print 'ok'
                     pub_stop.publish(0)
 
-            pub_gamma.publish(gamma)
+            pub_twist_msg.publish(twist_msg)
             pub_acc.publish(q_acc)
-            pub_brk.publish(q_brake)
+            # pub_brk.publish(q_brake)
 
             integral_theta += theta
             integral_speed += speed_error
@@ -366,16 +368,16 @@ if __name__ == '__main__':
         print 'Next KeyFrame:   ', frame_id
         print 'x_prime:         ', x_prime
         print 'y_prime:         ', y_prime
-        print 'Next_curve_id:   ', nearest_curve_id
+        # print 'Next_curve_id:   ', nearest_curve_id
         print 'on_curve:        ', on_curve
-        print 'd_to_next_curve: ', d_to_next_curve
+        # print 'd_to_next_curve: ', d_to_next_curve
         print 'Speed:           ', speed_d
         print 'Speed setpoint:  ', speed_sp
         print 'Speed error:     ', speed_error
         print 'Distance Error:  ', error_d
-        print 'Gamma Setpoint:  ', gamma
+        print 'twist_msg Setpoint:  ', twist_msg
         print 'Acc Setpoint:    ', q_acc
-        print 'Brakes Setpoint: ', q_brake
+        # print 'Brakes Setpoint: ', q_brake
         print 'Output gamma:    ', output_gamma
         print 'Output_brk:      ', output_brk
         print ' '

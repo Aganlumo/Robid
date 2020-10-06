@@ -20,6 +20,8 @@ ORB_SLAM2/Thirdparty/g2o/lib/
 ORB_SLAM2/Vocabulary/ORBvoc.txt
 ORB_SLAM2/Vocabulary/ORBvoc.bin
 ORB_SLAM2/build/
+ORB_SLAM2/Examples/Monocular/mono_kitti
+ORB_SLAM2/Examples/Monocular/mono_tum
 *~
 ORB_SLAM2/lib/
 build/
@@ -35,3 +37,6 @@ src/orb_slam_2_ros
 turtle.sh
 ORB_SLAM2/mapRGBD.bin
 ORB_SLAM2/CMakeLists_kinetic.txt
+src/turtlebot3/.git
+src/turtlebot3_msgs/.git
+src/turtlebot3_simulations/.git
