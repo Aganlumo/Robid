@@ -41,8 +41,8 @@ echo "Building for turtlebot3"
 cd ../../
 catkin_make_isolated
 
-echo "source ~/Robid/devel_isolated/setup.bash" >> ~/.bashrc
-echo "export TURTLEBOT3_MODEL=waffle" >> ~/.bashrc
+# echo "source ~/Robid/devel_isolated/setup.bash" >> ~/.bashrc
+# echo "export TURTLEBOT3_MODEL=waffle" >> ~/.bashrc
 source ~/.bashrc
 
 echo "Building ORB_SLAM2"
@@ -50,7 +50,7 @@ cd ../ORB_SLAM2
 chmod +x build.sh
 ./build.sh
 
-echo "export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:~/Robid/ORB_SLAM2/Examples/ROS" >> ~/.bashrc
+# echo "export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:~/Robid/ORB_SLAM2/Examples/ROS" >> ~/.bashrc
 source ~/.bashrc
 echo "Building for ROS"
 chmod +x build_ros.sh
