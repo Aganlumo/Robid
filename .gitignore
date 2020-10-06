@@ -40,3 +40,4 @@ ORB_SLAM2/CMakeLists_kinetic.txt
 src/turtlebot3/.git
 src/turtlebot3_msgs/.git
 src/turtlebot3_simulations/.git
+src/turtlebot3/.github
