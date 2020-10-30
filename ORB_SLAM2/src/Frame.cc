@@ -121,7 +121,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
       mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth)
 {
     // Test
-    std::cout << "-------------Frame nNextId: " << nNextId << std::endl;
+    // std::cout << "-------------Frame nNextId: " << nNextId << std::endl;
     //
     // Frame ID
     mnId=nNextId++;
@@ -134,10 +134,10 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
     mvInvScaleFactors = mpORBextractorLeft->GetInverseScaleFactors();
     mvLevelSigma2 = mpORBextractorLeft->GetScaleSigmaSquares();
     mvInvLevelSigma2 = mpORBextractorLeft->GetInverseScaleSigmaSquares();
-    std::cout << "test..." << std::endl;
+    // std::cout << "test..." << std::endl;
     // ORB extraction
     ExtractORB(0,imGray);
-    std::cout << "test..." << std::endl;
+    // std::cout << "test..." << std::endl;
     N = mvKeys.size();
 
     if(mvKeys.empty())

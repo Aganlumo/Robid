@@ -20,9 +20,9 @@ import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
 
-os_pos_x = 0.0
-os_pos_y = 0.0
-os_theta = 0.0
+# os_pos_x = 0.0
+# os_pos_y = 0.0
+# os_theta = 0.0
 
 time_stamp = 0.0
 last_time_stamp = 0.0
@@ -35,11 +35,13 @@ os_state = 1
 q_ = Pose()
 gamma = Twist()
 
+q_.position.x = 1.0
+q_.position.y = 1.0
 
 def callback_pose(data):
-    global os_pos_x
-    global os_pos_y
-    global os_theta
+    # global os_pos_x
+    # global os_pos_y
+    # global os_theta
     global time_stamp
     global q_
     q_ = data.pose
@@ -144,22 +146,28 @@ if __name__ == '__main__':
     out_right = ctrl.Consequent(np.arange(0, 6, 0.1), 'out_right')
     out_left = ctrl.Consequent(np.arange(0, 6, 0.1), 'out_left')
 
-    angle['N'] = fuzz.trimf(angle.universe, [-1, -1, 0])
-    angle['Z'] = fuzz.trimf(angle.universe, [-1, 0, 1])
-    angle['P'] = fuzz.trimf(angle.universe, [0, 1, 1])
+    # [left vertex, up, right vertex] for triangular function in controller
+    # Triangular functions for angle input
+    angle['N'] = fuzz.trimf(angle.universe, [-2, -1, 0]) # N -> Negative
+    angle['Z'] = fuzz.trimf(angle.universe, [-1, 0, 1]) # Z -> Zero
+    angle['P'] = fuzz.trimf(angle.universe, [0, 1, 2]) # P -> Positive
 
-    distance['Z'] = fuzz.trimf(distance.universe, [0, 0, 3.25])
-    distance['M'] = fuzz.trimf(distance.universe, [0, 3.25, 6.5])
-    distance['F'] = fuzz.trimf(distance.universe, [3.25, 6.5, 6.5])
+    # Triangular functions for distance input
+    distance['Z'] = fuzz.trimf(distance.universe, [-3.25, 0, 3.25]) # Z -> Zero
+    distance['M'] = fuzz.trimf(distance.universe, [0, 3.25, 6.5]) # M -> Mid
+    distance['F'] = fuzz.trimf(distance.universe, [3.25, 6.5, 9.75]) # F -> Far
 
-    out_right['S'] = fuzz.trimf(out_right.universe, [0, 0, 3])
-    out_right['M'] = fuzz.trimf(out_right.universe, [0, 3, 6])
-    out_right['F'] = fuzz.trimf(out_right.universe, [3, 6, 6])
+    # Triangular functions right motor output
+    out_right['S'] = fuzz.trimf(out_right.universe, [-3, 0, 3]) # s -> slow
+    out_right['M'] = fuzz.trimf(out_right.universe, [0, 3, 6]) # M -> mid
+    out_right['F'] = fuzz.trimf(out_right.universe, [3, 6, 9]) # F -> Fast
 
-    out_left['S'] = fuzz.trimf(out_left.universe, [0, 0, 3])
+    # Triangular functions left motor output
+    out_left['S'] = fuzz.trimf(out_left.universe, [-3, 0, 3])
     out_left['M'] = fuzz.trimf(out_left.universe, [0, 3, 6])
-    out_left['F'] = fuzz.trimf(out_left.universe, [3, 6, 6])
+    out_left['F'] = fuzz.trimf(out_left.universe, [3, 6, 9])
 
+    # Rule set for right motor
     rule1r = ctrl.Rule(angle['N'] & distance['F'], out_right['M'])
     rule2r = ctrl.Rule(angle['N'] & distance['M'], out_right['M'])
     rule3r = ctrl.Rule(angle['N'] & distance['Z'], out_right['S'])
@@ -170,6 +178,7 @@ if __name__ == '__main__':
     rule8r = ctrl.Rule(angle['P'] & distance['M'], out_right['F'])
     rule9r = ctrl.Rule(angle['P'] & distance['Z'], out_right['F'])
 
+    # Rule set for left motor
     rule1l = ctrl.Rule(angle['N'] & distance['F'], out_left['F'])
     rule2l = ctrl.Rule(angle['N'] & distance['M'], out_left['F'])
     rule3l = ctrl.Rule(angle['N'] & distance['Z'], out_left['M'])
@@ -213,7 +222,7 @@ if __name__ == '__main__':
         error_d = math.sqrt(error_x**2 + error_y**2)
         x_prime = error_x*math.cos(q_.orientation.y*math.pi/180) - error_y*math.sin(q_.orientation.y*math.pi/180)
         y_prime = error_x*math.sin(q_.orientation.y*math.pi/180) + error_y*math.cos(q_.orientation.y*math.pi/180)
-        theta = math.atan(x_prime/y_prime)*180/math.pi
+        theta = -math.atan(x_prime/y_prime)*180/math.pi
 
         if last_time_stamp != time_stamp:
             # print 'Last time stamp: ', last_time_stamp
@@ -241,8 +250,8 @@ if __name__ == '__main__':
 
             r = right.output['out_right']
             l = left.output['out_left']
-            angle_speed = (r-l)*1000/287
-            angle_speed = (1.82*angle_speed)/20.9059233449
+            angle_speed = (r-l)*1000/287 # ???
+            angle_speed = (0.7*angle_speed)/20.9059233449 # ????
             linear_speed = (r*0.26)/6
 
             if os_state == 2: #camera_state 2 is camera lost
@@ -254,10 +263,10 @@ if __name__ == '__main__':
 
                 if frame_id >= (next_frame_stop - 6) and frame_id <= (next_frame_stop + 6):
                     # frame_id += 7
-                    print ('should stop')
+                    # print ('should stop')
                     pub_stop.publish(1)
                 else:
-                    print ('ok')
+                    # print ('ok')
                     pub_stop.publish(0)
 
             pub_twist_msg.publish(gamma)
@@ -266,12 +275,19 @@ if __name__ == '__main__':
             # last_error_speed = speed_error
 
             if (error_d <= 1 or y_prime < 0):
-                integral_theta = 0
+                # integral_theta = 0
                 #integral_speed = 0
-                frame_id += 7
+                frame_id += 2
                 if frame_id > len(values) - 5:
                     frame_id = 0
 
+
+            if (angle_speed < 0):
+                print('Go RIGHT')
+            elif angle_speed > 0:
+                print('Go LEFT')
+
+        print('Theta:           ', theta)
         print('Next KeyFrame:   ', frame_id)
         print('x_prime:         ', x_prime)
         print('y_prime:         ', y_prime)

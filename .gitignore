@@ -23,7 +23,7 @@ ORB_SLAM2/build/
 ORB_SLAM2/Examples/Monocular/mono_kitti
 ORB_SLAM2/Examples/Monocular/mono_tum
 *~
-ORB_SLAM2/lib/
+ORB_SLAM2/lib/*
 build/
 build_isolated/
 devel/
