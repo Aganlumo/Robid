@@ -13,6 +13,7 @@ import rospy
 import math
 import time
 from geometry_msgs.msg import PoseStamped, Twist, Pose
+from nav_msgs.msg import Odometry
 from std_msgs.msg import Int16
 
 import numpy as np
@@ -35,6 +36,9 @@ os_state = 1
 q_ = Pose()
 gamma = Twist()
 
+q_gazebo = Pose()
+os2_estimate = Pose()
+
 q_.position.x = 1.0
 q_.position.y = 1.0
 
@@ -53,6 +57,10 @@ def callback_pose(data):
 def callback_state(data):
     global os_state
     os_state= data.data
+
+def callback_gazebo(data):
+    global q_gazebo
+    q_gazebo = data.pose.pose
 
 
 # Function in charge of reading an extern file that cotains the data of the map
@@ -82,6 +90,7 @@ def getfile():
             buffer.pop(0)
             values.append(buffer)
         count += 1
+    # rfile.close()
     return (values)
 
 # Function incharge of finding the nearest key frame
@@ -131,14 +140,12 @@ def nearKeyFrame(values):
 
 
 if __name__ == '__main__':
+    f = open("ORB_SLAM2_gazebo_error_estimate.txt", "w")
+    f.close()
     last_error_theta = 0.0
     last_error_speed = 0.0
-    next_frame_stop = 35
     on_curve = False
     speed_error = 0.0
-    output_gamma = 0.0
-    output_brk = 0.0
-    output_acc = 0.0
 
     angle = ctrl.Antecedent(np.arange(-1, 1, 0.1), 'angle')
     distance = ctrl.Antecedent(np.arange(0, 6.5, 0.1), 'distance')
@@ -148,9 +155,9 @@ if __name__ == '__main__':
 
     # [left vertex, up, right vertex] for triangular function in controller
     # Triangular functions for angle input
-    angle['N'] = fuzz.trimf(angle.universe, [-2, -1, 0]) # N -> Negative
-    angle['Z'] = fuzz.trimf(angle.universe, [-1, 0, 1]) # Z -> Zero
-    angle['P'] = fuzz.trimf(angle.universe, [0, 1, 2]) # P -> Positive
+    angle['N'] = fuzz.trimf(angle.universe, [-10, -5, 0]) # N -> Negative
+    angle['Z'] = fuzz.trimf(angle.universe, [-5, 0, 5]) # Z -> Zero
+    angle['P'] = fuzz.trimf(angle.universe, [0, 5, 10]) # P -> Positive
 
     # Triangular functions for distance input
     distance['Z'] = fuzz.trimf(distance.universe, [-3.25, 0, 3.25]) # Z -> Zero
@@ -213,6 +220,12 @@ if __name__ == '__main__':
         # Ctrl + C shuts program down
         rospy.Subscriber('ORB_SLAM2/pose', PoseStamped, callback_pose)
         rospy.Subscriber('ORB_SLAM2/Camera_State', Int16, callback_state)
+        rospy.Subscriber('odom', Odometry, callback_gazebo)
+
+        TransMat = np.matrix([[0,1,-1],[-1,0,-3],[0,0,1]])
+        ORB_SLAM2Mat = np.matrix([[q_.position.x],[q_.position.y],[0]])
+        offset = np.matmul(TransMat, ORB_SLAM2Mat)
+        # offset[0,0] = offset - q_gazebo.position.x
 
         desired_x = values[frame_id][0]
         desired_y = values[frame_id][1]
@@ -225,6 +238,7 @@ if __name__ == '__main__':
         theta = -math.atan(x_prime/y_prime)*180/math.pi
 
         if last_time_stamp != time_stamp:
+            f = open("ORB_SLAM2_gazebo_error_estimate.txt", "a+")
             # print 'Last time stamp: ', last_time_stamp
             if last_time_stamp > time_stamp:
                 delta_time = (time_stamp + 10**9) - last_time_stamp
@@ -238,20 +252,23 @@ if __name__ == '__main__':
             last_q = q_
             last_time_stamp = time_stamp
 
+            print('Theta:           ', theta)
+            print('Distance Error:  ', error_d)
             # speed_error = speed_sp
             # print("Entered is_shutdown")
 
             right.input['angle'] = theta
-            right.input['distance'] = 6*error_d
+            right.input['distance'] = error_d
             left.input['angle'] = theta
-            left.input['distance'] = 6*error_d
+            left.input['distance'] = error_d
+            time.sleep(0.01)
             right.compute()
             left.compute()
 
             r = right.output['out_right']
             l = left.output['out_left']
             angle_speed = (r-l)*1000/287 # ???
-            angle_speed = (0.7*angle_speed)/20.9059233449 # ????
+            angle_speed = (1.82*angle_speed)/20.9059233449 # ????
             linear_speed = (r*0.26)/6
 
             if os_state == 2: #camera_state 2 is camera lost
@@ -261,47 +278,47 @@ if __name__ == '__main__':
                 gamma.linear.x = linear_speed
                 # q_brake = brk_control(output_brk)
 
-                if frame_id >= (next_frame_stop - 6) and frame_id <= (next_frame_stop + 6):
-                    # frame_id += 7
-                    # print ('should stop')
-                    pub_stop.publish(1)
-                else:
-                    # print ('ok')
-                    pub_stop.publish(0)
-
             pub_twist_msg.publish(gamma)
 
             last_error_theta = theta
             # last_error_speed = speed_error
 
-            if (error_d <= 1 or y_prime < 0):
+            if (error_d <= 0.3 or y_prime < 0):
                 # integral_theta = 0
                 #integral_speed = 0
-                frame_id += 2
+                frame_id += 1
                 if frame_id > len(values) - 5:
                     frame_id = 0
 
+            os2_estimate.position.x = offset[0, 0] - 3.0 - q_gazebo.position.x
+            os2_estimate.position.y = offset[1, 0] + 1.0 - q_gazebo.position.y
+
+            print(os2_estimate.position.x)
+
+
+            print(offset)
+
+            f.write("%5.2f,%5.2f\n" %(os2_estimate.position.x, os2_estimate.position.y))
 
             if (angle_speed < 0):
                 print('Go RIGHT')
             elif angle_speed > 0:
                 print('Go LEFT')
 
-        print('Theta:           ', theta)
+            if (error_d < 0):
+                print('Distance Zero')
+            elif (error_d > 0) and (error_d < 4.875):
+                print('Distance Mid')
+            else:
+                print 'Distance Far'
+
+            f.close()
+
+
+
         print('Next KeyFrame:   ', frame_id)
-        print('x_prime:         ', x_prime)
-        print('y_prime:         ', y_prime)
-        # print 'Next_curve_id:   ', nearest_curve_id
         print('on_curve:        ', on_curve)
-        # print 'd_to_next_curve: ', d_to_next_curve
-        print('Speed:           ', speed_d)
-        # print('Speed setpoint:  ', speed_sp)
-        # print('Speed error:     ', speed_error)
-        print('Distance Error:  ', error_d)
+        print('Distance Error*6:', error_d*6)
         print('twist_msg Setpoint:  ', gamma)
-        # print('Acc Setpoint:    ', q_acc)
-        # print 'Brakes Setpoint: ', q_brake
-        print('Output gamma:    ', output_gamma)
-        print('Output_brk:      ', output_brk)
         print(' ')
         rate.sleep()

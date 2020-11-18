@@ -23,7 +23,7 @@ ORB_SLAM2/build/
 ORB_SLAM2/Examples/Monocular/mono_kitti
 ORB_SLAM2/Examples/Monocular/mono_tum
 *~
-ORB_SLAM2/lib/*
+ORB_SLAM2/lib
 build/
 build_isolated/
 devel/
@@ -37,3 +37,5 @@ src/orb_slam_2_ros
 turtle.sh
 ORB_SLAM2/mapRGBD.bin
 ORB_SLAM2/CMakeLists_kinetic.txt
+ORB_SLAM2/ORB_SLAM2_gazebo_error_estimate.txt
+ORB_SLAM2/gazeboOffset.py
